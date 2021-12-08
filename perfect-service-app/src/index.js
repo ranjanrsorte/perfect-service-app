@@ -2,11 +2,19 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+
+import './../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import MainRoutingComponent from './components/mainroutingcomponent';
+import { BrowserRouter } from 'react-router-dom';
+
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    {/* <App /> */}
+    <BrowserRouter>
+      <MainRoutingComponent></MainRoutingComponent>
+    </BrowserRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );

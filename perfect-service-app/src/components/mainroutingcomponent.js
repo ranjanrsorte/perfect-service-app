@@ -1,16 +1,17 @@
-import { Link, Route, Switch, Redirect } from "react-router-dom";
+import { Route, Switch } from "react-router-dom";
 import HomeComponent from "./homecomponent";
+import UserLoginComponent from "./userlogincomponent";
+import RegisterNewUserComponent from "./registernewusercomponent";
+import UserProfileComponent from './userprofilecomponent';
+import AllBookingsComponent from './allbookingscomponent';
+import CustomerListComponent from './customerlistcomponent';
+import EmployeesListComponent from './employeeslistcomponent';
+import AssignedServicingComponent from './assignedservicingcomponent';
+import PartsAndPriceComponent from './partsandpricecomponent';
+import BillComponent from './billcomponent';
+
 
 const MainRoutingComponent = () => {
-    const showRoutes = true;
-    const showUserProfile = true;
-    const showAllBookings = true;
-    const showCustomerList = true;
-    const showEmployeesList = true;
-    const showAssignedServicing = true;
-    const showPartsAndPrice = true;
-    const showBill = true;
-    const showHome = true;
     return (
         <div>
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
@@ -20,52 +21,26 @@ const MainRoutingComponent = () => {
                             <a className="nav-link appName" href="#">Perfect Service</a>
                         </li>
                         <li className="nav-item">
-                            <a className="nav-link" href="#">Home</a>
+                            <a className="nav-link" href="/">Home</a>
                         </li>
                         <li className="nav-item">
                             <a className="nav-link" href="#">About Us</a>
                         </li>
-                        <li className="nav-item">
-                            <a className="nav-link" href="#">Login</a>
-                        </li>
                     </ul>
                 </div>
             </nav>
-            <div className="row">
-                <div className="col-sm-2 moduleRoutes">
-                    <ul className="nav flex-column">
-                        <li className="nav-item" hidden={showUserProfile}>
-                            <a className="nav-link" href="#">User Profile</a>
-                        </li>
-                        <li className="nav-item" hidden={showAllBookings}>
-                            <a className="nav-link" href="#">All Bookings</a>
-                        </li>
-                        <li className="nav-item" hidden={showCustomerList}>
-                            <a className="nav-link" href="#">Customers List</a>
-                        </li>
-                        <li className="nav-item" hidden={showEmployeesList}>
-                            <a className="nav-link" href="#">Employees List</a>
-                        </li>
-                        <li className="nav-item" hidden={showAssignedServicing}>
-                            <a className="nav-link" href="#">Assigned Servicing</a>
-                        </li>
-                        <li className="nav-item" hidden={showPartsAndPrice}>
-                            <a className="nav-link" href="#">Parts and Price</a>
-                        </li>
-                        <li className="nav-item" hidden={showBill}>
-                            <a className="nav-link" href="#">Bill</a>
-                        </li>
-                    </ul>
-                </div>
-                <div className="col-sm-10" hidden={showRoutes}>
-                    {/* <Switch>
-                        <Route exact path="/" component={HomeComponent}></Route>
-                    </Switch> */}
-                </div>
-            </div>
             <div>
                 <Switch>
-                    <Route exact path="/" component={() => (<HomeComponent showHome={showHome} />)}></Route>
+                    <Route exact path="/" component={HomeComponent}></Route>
+                    <Route exact path="/login" component={UserLoginComponent}></Route>
+                    <Route exact path="/create" component={RegisterNewUserComponent}></Route>
+                    <Route exact path="/userprofile" component={UserProfileComponent}></Route>
+                    <Route exact path="/bookings" component={AllBookingsComponent}></Route>
+                    <Route exact path="/customers" component={CustomerListComponent}></Route>
+                    <Route exact path="/employees" component={EmployeesListComponent}></Route>
+                    <Route exact path="/servicing" component={AssignedServicingComponent}></Route>
+                    <Route exact path="/parts" component={PartsAndPriceComponent}></Route>
+                    <Route exact path="/bill" component={BillComponent}></Route>
                 </Switch>
             </div>
         </div>

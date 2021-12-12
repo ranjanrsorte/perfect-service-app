@@ -1,8 +1,18 @@
 const HomeComponent = (props) => {
-    const showHome = props.showHome;
+
+    const loginpage = () => {
+        props.history.push('/login');
+    }
     return (
-        <div hidden={showHome}>
-            <h1 className="appTagline">We Care For Your Vehicle</h1>
+        <div>
+            <div>
+                <input type="button" value="Login" className="btn btn-primary btn-sm homeloginbtn"
+                    onClick={loginpage} />
+            </div>
+            <hr />
+            <div>
+                <h1 className="appTagline">We Care For Your Vehicle</h1>
+            </div>
             <hr />
             <div className="container">
                 <div className="row">

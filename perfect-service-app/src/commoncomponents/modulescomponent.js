@@ -3,12 +3,13 @@ import { useEffect, useState } from 'react';
 
 const ModulesComponent = () => {
     const showUserProfile = sessionStorage.getItem('role') === 'Customer' ? false : true;
-    const showAllBookings = sessionStorage.getItem('role') === 'Customer' || sessionStorage.getItem('role') === 'Administrator' ? false : true;
-    const showCustomerList = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Manager' ? false : true;
-    const showEmployeesList = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Manager' || sessionStorage.getItem('role') === 'Servicing Lead' ? false : true;
-    const showAssignedServicing = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Worker' || sessionStorage.getItem('role') === 'Servicing Lead' ? false : true;
+    const showAllBookings = sessionStorage.getItem('role') === 'Customer' || sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Servicing Representative' ? false : true;
+    const showCustomerList = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Servicing Manager' ? false : true;
+    const showEmployeesList = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Servicing Manager' || sessionStorage.getItem('role') === 'Servicing Leads' ? false : true;
+    const showAssignedServicing = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Worker' || sessionStorage.getItem('role') === 'Servicing Leads' ? false : true;
     const showPartsAndPrice = sessionStorage.getItem('role') === 'Administrator' ? false : true;
     const showBill = sessionStorage.getItem('role') === 'Accountant' ? false : true;
+    const showAssignedWork = sessionStorage.getItem('role') === 'Administrator' || sessionStorage.getItem('role') === 'Servicing Manager' || sessionStorage.getItem('role') === 'Servicing Leads' ? false : true;
 
     return (
 
@@ -19,6 +20,9 @@ const ModulesComponent = () => {
                 </li>
                 <li className="nav-item" hidden={showAllBookings}>
                     <a className="nav-link" href="/bookings">All Bookings</a>
+                </li>
+                <li className="nav-item" hidden={showAssignedWork}>
+                    <a className="nav-link" href="/assignedwork">Assigned Work</a>
                 </li>
                 <li className="nav-item" hidden={showCustomerList}>
                     <a className="nav-link" href="/customers">Customers List</a>

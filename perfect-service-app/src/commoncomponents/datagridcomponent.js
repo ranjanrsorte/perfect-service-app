@@ -25,7 +25,7 @@ const DataGridComponent = (props) => {
                         <tr>
                             {
                                 columns.map((c, i) => (
-                                    <th key={i}>
+                                    <th className="allbookingstablehead" key={i}>
                                         {c.toUpperCase()}
                                     </th>
                                 ))

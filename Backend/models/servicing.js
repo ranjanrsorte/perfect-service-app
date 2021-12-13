@@ -81,7 +81,7 @@ export default class servicing extends Model {
         key: 'id'
       }
     },
-    servicestatus: {
+    servicestatusid: {
       type: DataTypes.SMALLINT,
       allowNull: true,
       references: {

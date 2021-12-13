@@ -13,7 +13,12 @@ const UserLoginComponent = (props) => {
             sessionStorage.setItem('token', response.data.token);
             sessionStorage.setItem('role', response.data.role);
             sessionStorage.setItem('email', response.data.email);
-            props.history.push("/bookings");
+            if(response.data.role === 'Customer' || response.data.role === 'Servicing Representative') {
+                props.history.push("/bookings");
+            } else if (response.data.role === 'Servicing Manager' || response.data.role === 'Servicing Leads' || response.data.role === 'Servicing Worker') {
+                props.history.push("/assignedwork");
+            }
+            
         }).catch((error) => {
             setMessage(error);
         });

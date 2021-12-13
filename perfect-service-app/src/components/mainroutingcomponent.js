@@ -9,6 +9,7 @@ import EmployeesListComponent from './employeeslistcomponent';
 import AssignedServicingComponent from './assignedservicingcomponent';
 import PartsAndPriceComponent from './partsandpricecomponent';
 import BillComponent from './billcomponent';
+import AssignedWorkComponent from "./assignedworkcomponent";
 
 
 const MainRoutingComponent = () => {
@@ -41,6 +42,7 @@ const MainRoutingComponent = () => {
                     <Route exact path="/servicing" component={AssignedServicingComponent}></Route>
                     <Route exact path="/parts" component={PartsAndPriceComponent}></Route>
                     <Route exact path="/bill" component={BillComponent}></Route>
+                    <Route exact path="/assignedwork" component={AssignedWorkComponent}></Route>
                 </Switch>
             </div>
         </div>

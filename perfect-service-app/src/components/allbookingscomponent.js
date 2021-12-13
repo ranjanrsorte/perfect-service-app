@@ -7,10 +7,13 @@ import ServicingService from '../service/servicingservice';
 import DataGridComponent from "../commoncomponents/datagridcomponent";
 
 const AllBookingsComponent = (props) => {
-    const showBookServiceBtn = sessionStorage.getItem('role') === 'Customer' ? false : true;
+    const showBookServiceBtn = sessionStorage.getItem('role') === 'Customer' || sessionStorage.getItem('role') === 'Servicing Representative' ? false : true;
     const [showServiceBookingForm, setServiceBookingForm] = useState(true);
     const [showServiceBookingList, setServiceBookingList] = useState(false);
     const [showReadOnlyServiceBookingForm, setReadOnlyServiceBookingForm] = useState(true);
+    const [showBillDetails, setBillDetails] = useState(true);
+    const showCustomerNameField = sessionStorage.getItem('role') === 'Servicing Representative' ? false : true;
+    const showCustomerEmailField = sessionStorage.getItem('role') === 'Servicing Representative' ? false : true;
     const [servicing, setServicing] = useState({
         vehiclenumber: '',
         vehicletype: '',
@@ -22,6 +25,7 @@ const AllBookingsComponent = (props) => {
     });
     const [message, setMessage] = useState('');
     const [vehicletype, setVehicleType] = useState([]);
+    const [bookingtype, setBookingType] = useState([]);
     const [servicedata, setServiceData] = useState({});
     const [servicingList, setServicingList] = useState([]);
     const vehserv = new VehicleService();
@@ -50,6 +54,14 @@ const AllBookingsComponent = (props) => {
                     records[i].ispickup = records[i].ispickup === 0 ? 'No' : 'Yes';
                 }
                 setServicingList(records);
+            }
+        }).catch((error) => {
+            setMessage(error);
+        });
+
+        servingserv.getBookingType().then((response) => {
+            if(response.status === 200) {
+                setBookingType(response.data.type);
             }
         }).catch((error) => {
             setMessage(error);
@@ -94,6 +106,12 @@ const AllBookingsComponent = (props) => {
         if (evt.target.name === "ispickupname") {
             setServiceData({ ...servicedata, ispickup: evt.target.value });
         }
+        if (evt.target.name === "customeremailname") {
+            setServiceData({ ...servicedata, customeremail: evt.target.value });
+        }
+        if (evt.target.name === "bookingtypename") {
+            setServiceData({ ...servicedata, bookingtype: evt.target.value });
+        }
     }
 
     const getServiceRow = (row) => {
@@ -107,25 +125,33 @@ const AllBookingsComponent = (props) => {
         setReadOnlyServiceBookingForm(true);
     }
 
+    const toggleBillTable = () => {
+        setReadOnlyServiceBookingForm(!showReadOnlyServiceBookingForm);
+        setBillDetails(false);
+    }
+
     const deleteServicing = (data) => {
-        servingserv.deleterecord(data).then((response) => {
-            if(response.status === 200) {
-                servingserv.getServicingDataByCustomer().then((response) => {
-                    if (response.status === 200) {
-                        let records = response.data.records;
-                        for (let i = 0; i < records.length; i++) {
-                            records[i].ispickup = records[i].ispickup === 0 ? 'No' : 'Yes';
+        if(data.vehiclenumber !== "") {
+            servingserv.deleterecord(servicing).then((response) => {
+                if(response.status === 200) {
+                    servingserv.getServicingDataByCustomer().then((response) => {
+                        if (response.status === 200) {
+                            let records = response.data.records;
+                            for (let i = 0; i < records.length; i++) {
+                                records[i].ispickup = records[i].ispickup === 0 ? 'No' : 'Yes';
+                            }
+                            setServicingList(records);
                         }
-                        setServicingList(records);
-                    }
-                    console.log(`${JSON.stringify(response)}`);
-                }).catch((error) => {
-                    setMessage(error);
-                });
-            }
-        }).catch((error) => {
-            setMessage(error);
-        });
+                        setServiceBookingList(!showServiceBookingList);
+                        setReadOnlyServiceBookingForm(!showReadOnlyServiceBookingForm);
+                    }).catch((error) => {
+                        setMessage(error);
+                    });
+                }
+            }).catch((error) => {
+                setMessage(error);
+            });
+        }
     }
 
     if (sessionStorage.getItem('token') != null) {
@@ -146,6 +172,12 @@ const AllBookingsComponent = (props) => {
                         <div className="container" hidden={showServiceBookingList}>
                             <DataGridComponent
                                 dataSource={servicingList}
+                                getSelectedRow={getServiceRow}></DataGridComponent>
+
+                        </div> 
+                        <div className="container" hidden={showBillDetails}>
+                            <DataGridComponent
+                                dataSource={[servicing]}
                                 getSelectedRow={getServiceRow}></DataGridComponent>
 
                         </div>
@@ -174,6 +206,25 @@ const AllBookingsComponent = (props) => {
                                     onChange={handleOnChange}>
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
+                                </select>
+                                <br />
+                            </div>
+                            <div className="form-group" hidden={showCustomerEmailField}>
+                                <label>Customer Email</label>
+                                <input className="form-control" type="email" name="customeremailname" id="customeremailid"
+                                    value={servicedata.customeremail} onChange={handleOnChange} />
+                                <br />
+                            </div>
+                            <div hidden={showCustomerEmailField}>
+                                <label>Booking Type</label>
+                                <select className="form-control" name="bookingtypename" id="bookingtypeid"
+                                    onChange={handleOnChange}
+                                >
+                                    {bookingtype.map((ds, idx) => (
+                                        <option key={idx} value={ds.name}>
+                                            {ds.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 <br />
                             </div>
@@ -209,6 +260,12 @@ const AllBookingsComponent = (props) => {
                                             value={servicing.numberofservice} readOnly={true} />
                                         <br />
                                     </div>
+                                    <div>
+                                        <label>Service Status</label>
+                                        <input className="form-control" type="text" name="servicestatusnamereadonly" id="servicestatusidreadonly"
+                                            value={servicing.servicestatusid} readOnly={true} />
+                                        <br />
+                                    </div>
                                 </div>
                                 <div className="col-sm-6">
                                     <div>
@@ -229,11 +286,24 @@ const AllBookingsComponent = (props) => {
                                             value={servicing.actualserviceenddate} readOnly={true} />
                                         <br />
                                     </div>
+                                    
+                                    <div hidden={showCustomerNameField}>
+                                        <label>Customer Name</label>
+                                        <input className="form-control" type="text" name="customernamenamereadonly" id="customernameidreadonly"
+                                            value={servicing.customerid} readOnly={true} />
+                                        <br />
+                                    </div>
+                                    <div hidden={showCustomerNameField}>
+                                        <label>Booking Type</label>
+                                        <input className="form-control" type="text" name="bookingtypenamereadonly" id="bookingtypeidreadonly"
+                                            value={servicing.registrationtype} readOnly={true} />
+                                        <br />
+                                    </div>
                                 </div>
                                 <div>
                                     <input className="btn btn-primary btnCancelBookForm" type="button" value="Cancel" onClick={toggleReadOnlyServiceForm} />
-                                    <input className="btn btn-primary btnCancelBookForm" type="button" value="Delete" onClick={deleteServicing(servicing)} />
-                                    {/* <input className="btn btn-primary btnCancelBookForm" type="button" value="Generate Bill" onClick={toggleReadOnlyServiceForm} /> */}
+                                    <input className="btn btn-primary btnCancelBookForm" type="button" value="Delete" onClick={deleteServicing} />
+                                    <input className="btn btn-primary btnCancelBookForm" type="button" value="Generate Bill" onClick={toggleBillTable} />
                                 </div>
                             </div>
                         </div>

@@ -147,4 +147,8 @@ code {
   margin-top: 2%;
 }
 
+.allbookingstablehead {
+  width: 200px !important;
+}
+
 /* END : DATA GRID TABLE */

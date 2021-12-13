@@ -5,7 +5,8 @@ export default class assignedworkers extends Model {
   static init(sequelize, DataTypes) {
   super.init({
     id: {
-      type: DataTypes.SMALLINT,
+      autoIncrement: true,
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },

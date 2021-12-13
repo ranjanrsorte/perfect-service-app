@@ -1,28 +1,20 @@
 import _sequelize from "sequelize";
 const DataTypes = _sequelize.DataTypes;
-import _servicing from  "./servicing.js";
+import _assignedworkers from  "./assignedworkers.js";
 
 export default function initModels(sequelize) {
-  const servicing = _servicing.init(sequelize, DataTypes);
+  const assignedworkers = _assignedworkers.init(sequelize, DataTypes);
 
-  servicing.belongsTo(bookingtype, { as: "registrationtype_bookingtype", foreignKey: "registrationtype"});
-  bookingtype.hasMany(servicing, { as: "servicings", foreignKey: "registrationtype"});
-  servicing.belongsTo(customer, { as: "customer", foreignKey: "customerid"});
-  customer.hasMany(servicing, { as: "servicings", foreignKey: "customerid"});
-  servicing.belongsTo(employee, { as: "servicelead", foreignKey: "serviceleadid"});
-  employee.hasMany(servicing, { as: "servicings", foreignKey: "serviceleadid"});
-  servicing.belongsTo(employee, { as: "servicemanager", foreignKey: "servicemanagerid"});
-  employee.hasMany(servicing, { as: "servicemanager_servicings", foreignKey: "servicemanagerid"});
-  servicing.belongsTo(employee, { as: "worker", foreignKey: "workerid"});
-  employee.hasMany(servicing, { as: "worker_servicings", foreignKey: "workerid"});
-  servicing.belongsTo(employeetype, { as: "bookedby_employeetype", foreignKey: "bookedby"});
-  employeetype.hasMany(servicing, { as: "servicings", foreignKey: "bookedby"});
-  servicing.belongsTo(servicestatus, { as: "servicestatus_servicestatus", foreignKey: "servicestatus"});
-  servicestatus.hasMany(servicing, { as: "servicings", foreignKey: "servicestatus"});
-  servicing.belongsTo(vehicletype, { as: "vehicletype_vehicletype", foreignKey: "vehicletype"});
-  vehicletype.hasMany(servicing, { as: "servicings", foreignKey: "vehicletype"});
+  assignedworkers.belongsTo(employee, { as: "servicelead", foreignKey: "serviceleadid"});
+  employee.hasMany(assignedworkers, { as: "assignedworkers", foreignKey: "serviceleadid"});
+  assignedworkers.belongsTo(employee, { as: "worker", foreignKey: "workerid"});
+  employee.hasMany(assignedworkers, { as: "worker_assignedworkers", foreignKey: "workerid"});
+  assignedworkers.belongsTo(servicetype, { as: "servicetype_servicetype", foreignKey: "servicetype"});
+  servicetype.hasMany(assignedworkers, { as: "assignedworkers", foreignKey: "servicetype"});
+  assignedworkers.belongsTo(servicing, { as: "servicing", foreignKey: "servicingid"});
+  servicing.hasMany(assignedworkers, { as: "assignedworkers", foreignKey: "servicingid"});
 
   return {
-    servicing,
+    assignedworkers,
   };
 }

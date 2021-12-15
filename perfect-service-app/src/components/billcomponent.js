@@ -62,7 +62,6 @@ const BillComponent = (props) => {
     }
 
     const saveBillData = () => {
-        debugger;
         billserv.saveBillData(pendingbilldata).then((response) => {
             if (response.status === 200) {
                 setPendingBillsData(!showPendingBillsData);

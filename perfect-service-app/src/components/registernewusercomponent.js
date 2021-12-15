@@ -71,12 +71,11 @@ const RegisterNewUserComponent = (props) => {
         }
         if (evt.target.name === "customertypename") {
             setCustomer({ ...customer, customertype: evt.target.value });
-        } debugger;
+        }
         validateForm(evt.target.name, evt.target.value);
     };
 
     const validateForm = (name, value) => {
-        debugger;
         if (name === 'nameuser') {
             if (value.length <= 0) {
                 setCustomerNameValid(false);
@@ -125,7 +124,7 @@ const RegisterNewUserComponent = (props) => {
                 setDisableCreateUserBtn(false);
             }
         }
-        if (name === "userprimarycontact") {debugger;
+        if (name === "userprimarycontact") {
             if(parseInt(value.length) <= 0) {
                 setValidPrimaryContactWarning(false);
                 setDisableCreateUserBtn(true);

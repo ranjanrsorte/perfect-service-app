@@ -10,6 +10,9 @@ import AssignedServicingComponent from './assignedservicingcomponent';
 import PartsAndPriceComponent from './partsandpricecomponent';
 import BillComponent from './billcomponent';
 import AssignedWorkComponent from "./assignedworkcomponent";
+import WaitingForDeliveryComponent from "./waitingfordeliverycomponent";
+import GeneratedBillComponent from "./genratedbillcomponent";
+import DailyBillCollectionComponent from "./dailybillcollection"
 
 
 const MainRoutingComponent = () => {
@@ -35,14 +38,17 @@ const MainRoutingComponent = () => {
                     <Route exact path="/" component={HomeComponent}></Route>
                     <Route exact path="/login" component={UserLoginComponent}></Route>
                     <Route exact path="/create" component={RegisterNewUserComponent}></Route>
-                    <Route exact path="/userprofile" component={UserProfileComponent}></Route>
+                    {/* <Route exact path="/userprofile" component={UserProfileComponent}></Route> */}
                     <Route exact path="/bookings" component={AllBookingsComponent}></Route>
-                    <Route exact path="/customers" component={CustomerListComponent}></Route>
-                    <Route exact path="/employees" component={EmployeesListComponent}></Route>
-                    <Route exact path="/servicing" component={AssignedServicingComponent}></Route>
-                    <Route exact path="/parts" component={PartsAndPriceComponent}></Route>
+                    {/* <Route exact path="/customers" component={CustomerListComponent}></Route> */}
+                    {/* <Route exact path="/employees" component={EmployeesListComponent}></Route> */}
+                    {/* <Route exact path="/servicing" component={AssignedServicingComponent}></Route> */}
+                    {/* <Route exact path="/parts" component={PartsAndPriceComponent}></Route> */}
                     <Route exact path="/bill" component={BillComponent}></Route>
                     <Route exact path="/assignedwork" component={AssignedWorkComponent}></Route>
+                    <Route exact path="/waiting" component={WaitingForDeliveryComponent}></Route>
+                    {/* <Route exact path="/generatedbill" component={GeneratedBillComponent}></Route> */}
+                    <Route exact path="/dailycollection" component={DailyBillCollectionComponent}></Route>
                 </Switch>
             </div>
         </div>

@@ -2,7 +2,7 @@ import { Sequelize } from "sequelize";
 import pkg from "sequelize";
 import jsonwebtoken from "jsonwebtoken";
 
-const { DataTypes } = pkg;
+const { DataTypes, Op } = pkg;
 
 import employeetype from './models/employeetype.js';
 import employee from './models/employee.js';
@@ -13,6 +13,8 @@ import servicing from './models/servicing.js';
 import bookingtype from './models/bookingtype.js';
 import servicestatus from './models/servicestatus.js';
 import assignedworkers from './models/assignedworkers.js';
+import partsprice from './models/partsprice.js';
+import bill from './models/bill.js';
 
 const sequelize = new Sequelize("perfectservice", "postgres", "mysql", {
     host: "localhost",
@@ -44,6 +46,8 @@ class DataAccess {
         bookingtype.init(sequelize, DataTypes);
         servicestatus.init(sequelize, DataTypes);
         assignedworkers.init(sequelize, DataTypes);
+        partsprice.init(sequelize, DataTypes);
+        bill.init(sequelize, DataTypes);
     }
 
     async authenticateEmployee(req, res) {
@@ -189,8 +193,8 @@ class DataAccess {
                         data.id = maxServicingId + 1;
                     }
 
-                    let numOfService = await servicing.count('vehiclenumber', { where: req.body.vehiclenumber });
-                    data.numberofservice = numOfService + 1;
+                    let numOfService = await servicing.findAll({ where: { vehiclenumber: req.body.vehiclenumber } });
+                    data.numberofservice = numOfService.length + 1;
 
                     let date = new Date();
                     data.registrationdate = date.getDate() + '-' + parseInt(date.getMonth() + 1) + '-' + date.getFullYear();
@@ -253,7 +257,7 @@ class DataAccess {
                             ],
                             where: { customerid: customerid }
                         });
-                    } else if (role === 'Servicing Representative') {
+                    } else if (role === 'Servicing Representative' || role === 'Administrator') {
                         servicingData = await servicing.findAll({
                             attributes: [
                                 'vehiclenumber',
@@ -347,8 +351,12 @@ class DataAccess {
                         serv = await servicing.findAll({ where: { serviceleadid: emp.id } });
                     } else if (req.decode.tokenDataJson.rolename === 'Servicing Worker') {
                         let emp = await employee.findOne({ where: { loginname: req.decode.tokenDataJson.username } });
-                        let assignwork = await assignedworkers.findOne({ where : { workerid: emp.id }});
-                        serv = await servicing.findAll({ where: { id: assignwork.servicingid } });
+                        let assignwork = await assignedworkers.findAll({ where: { workerid: emp.id } });
+                        let servid = [];
+                        for (let p = 0; p < assignwork.length; p++) {
+                            servid.push(parseInt(assignwork[p].servicingid));
+                        }
+                        serv = await servicing.findAll({ where: { id: { [Op.in]: servid } } });
                     }
 
                     if (serv) {
@@ -470,6 +478,43 @@ class DataAccess {
                         await assignedworkers.create(assignedcleaningworks);
                         await assignedworkers.create(assignedservicingworks);
 
+                    } else if (req.decode.tokenDataJson.rolename === 'Servicing Worker') {
+                        let servicestatusdata = await servicestatus.findOne({ where: { name: req.body.servicestatus } });
+                        serv = await servicing.update({
+                            servicestatusid: parseInt(servicestatusdata.id)
+                        }, {
+                            where: {
+                                vehiclenumber: req.body.vehiclenumber
+                            }
+                        });
+                        const servicedata = await servicing.findOne({ where: { vehiclenumber: req.body.vehiclenumber } });
+                        const vehiclepart = await partsprice.findOne({
+                            where: {
+                                part: req.body.parts,
+                                vehicletypeid: servicedata.vehicletype
+                            }
+                        });
+                        let customerbill = await bill.findOne({ where: { servicingid: servicedata.id } });
+
+                        if (customerbill != null) {
+                            customerbill = await bill.update({
+                                totalbill: vehiclepart.price
+                            }, { where: { servicingid: servicedata.id } });
+                        } else {
+                            let date = new Date();
+                            const billeddate = date.getDate() + '-' + parseInt(date.getMonth() + 1) + '-' + date.getFullYear();
+                            customerbill = await bill.create({
+                                customerid: servicedata.customerid,
+                                vehicletypeid: servicedata.vehicletype,
+                                totalbill: vehiclepart.price,
+                                servicingid: servicedata.id,
+                                billdate: billeddate,
+                                partprice: vehiclepart.price,
+                                serviceprice: 0,
+                                washingprice: 0,
+                                cleaningprice: 0
+                            });
+                        }
                     }
 
                     if (serv) {
@@ -544,6 +589,353 @@ class DataAccess {
                         .send({ message: "Some error Occurred while updating record" });
                 }
             );
+        }
+    }
+
+    async getServiceStatusList(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const servicestatuslist = await servicestatus.findAll();
+                    if (servicestatuslist) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data updated Successfully`, records: servicestatuslist });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while updating record" });
+                }
+            );
+        }
+    }
+
+    async getVehicleParts(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const vehicletypedata = await vehicletype.findOne({ where: { name: req.params.vehicletype } });
+                    const vehiclepart = await partsprice.findAll(
+                        { where: { vehicletypeid: vehicletypedata.id } }
+                    );
+                    if (vehiclepart) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: vehiclepart });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            );
+        }
+    }
+
+    async getPendingBills(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const serv = await servicing.findAll({ where: { servicestatusid: 3 } });
+                    let servid = [];
+                    let billdata = [];
+                    for (let p = 0; p < serv.length; p++) {
+                        servid.push(serv[p].id);
+                    }
+                    const pendingbills = await bill.findAll({ where: { servicingid: { [Op.in]: servid } } });
+                    if (pendingbills) {
+                        for (let i = 0; i < serv.length; i++) {
+                            const cust = await customer.findOne({ where: { id: serv[i].customerid } });
+                            const vehtype = await vehicletype.findOne({ where: { id: serv[i].vehicletype } });
+                            let pendingbillsdata = {
+                                "customername": cust.name,
+                                "vehicletype": vehtype.name,
+                                "totalbill": pendingbills[i].totalbill,
+                                "servicingid": pendingbills[i].servicingid,
+                                "billdate": pendingbills[i].billdate,
+                                "ispickup": serv[i].ispickup === 0 ? 'No' : 'Yes',
+                                "partprice": pendingbills[i].partprice
+                            };
+                            billdata.push(pendingbillsdata);
+                        }
+                        console.log(`........................................................`);
+                        console.log(`billdata ${JSON.stringify(billdata)}`);
+                        console.log(`........................................................`);
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: billdata });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            );
+        }
+    }
+
+    async updateBillData(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+
+                    let totalprice = parseInt(req.body.washingprice)
+                        + parseInt(req.body.cleaningprice)
+                        + parseInt(req.body.serviceprice)
+                        + parseInt(req.body.partprice);
+
+                    if (req.body.ispickup === 'Yes') {
+                        totalprice = parseInt(totalprice) + parseInt(req.body.pickupprice);
+                    }
+
+                    let updatedbill = {
+                        "washingprice": req.body.washingprice,
+                        "cleaningprice": req.body.cleaningprice,
+                        "serviceprice": req.body.serviceprice,
+                        "totalbill": parseInt(totalprice)
+                    }
+                    let billdata = await bill.update(updatedbill, { where: { servicingid: req.params.servicingid } });
+                    if (billdata) {
+                        const serv = await servicing.update({
+                            servicestatusid: 4
+                        }, { where: { id: req.params.servicingid } })
+                        return res
+                            .status(200)
+                            .send({ message: `Data updated Successfully`, records: billdata });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while updating record" });
+                }
+            );
+        }
+    }
+    async getBillPrices(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    let prices = await bill.findOne({
+                        attributes: [
+                            'washingprice', 'serviceprice', 'cleaningprice', 'pickupprice'
+                        ], where: { servicingid: req.params.servicingid }
+                    });
+                    if (prices) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: prices });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getWaitingForDeliveryData(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const serv = await servicing.findAll({
+                        attributes: [
+                            'vehiclenumber',
+                            'vehicletype',
+                            'customerid',
+                            'registrationtype',
+                            'servicestatusid'
+                        ], where: { servicestatusid: 4 }
+                    });
+                    if (serv) {
+                        let data = [];
+                        for (let x = 0; x < serv.length; x++) {
+                            let cust = await customer.findOne({ where: { id: serv[x].customerid } });
+                            let vehtype = await vehicletype.findOne({ where: { id: serv[x].vehicletype } });
+                            let status = await servicestatus.findOne({ where: { id: serv[x].servicestatusid } });
+                            let regnum = await bookingtype.findOne({ where: { id: serv[x].registrationtype } });
+
+                            let waitingdata = {
+                                'vehiclenumber': serv[x].vehiclenumber,
+                                'vehicletype': vehtype.name,
+                                'customername': cust.name,
+                                'registrationtype': regnum.name,
+                                'servicestatus': status.name
+                            }
+                            data.push(waitingdata);
+                        }
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: data });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async updateStatusDelivered(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    let date = new Date();
+                    let serviceenddate = date.getDate() + '-' + parseInt(date.getMonth() + 1) + '-' + date.getFullYear();
+                    const serv = await servicing.update({
+                        actualserviceenddate: serviceenddate,
+                        servicestatusid: 5
+                    }, { where: { vehiclenumber: req.body.vehiclenumber } });
+                    if (serv) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: serv });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getBillData(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const serv = await servicing.findOne({ where: { vehiclenumber: req.params.vehiclenumber } });
+                    const billdetails = await bill.findOne({
+                        attributes: [
+                            "billdate", "partprice", "serviceprice", "washingprice", "cleaningprice", "pickupprice", "totalbill"
+                        ],
+                        where: { servicingid: serv.id }
+                    });
+                    if (billdetails) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: billdetails });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getDailyBillReport(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const servicedate = req.params.servicedate;
+                    const splitteddate = servicedate.split('-');
+                    const dateday = splitteddate[2];
+                    const datemonth = splitteddate[1];
+                    const dateyear = splitteddate[0];
+                    const generatedbilldate = dateday + "-" + datemonth + "-" + dateyear;
+
+                    const billdata = await bill.findAll({ where: { billdate: generatedbilldate } });
+                    let billdetails = [];
+                    if (billdata) {
+                        for (let i = 0; i < billdata.length; i++) {
+                            const cust = await customer.findOne({ where: { id: billdata[i].customerid } });
+                            let billdetail = {
+                                "customername": cust.name,
+                                "washingprice": billdata[i].washingprice,
+                                "cleaningprice": billdata[i].cleaningprice,
+                                "serviceprice": billdata[i].serviceprice,
+                                "pickupprice": billdata[i].pickupprice,
+                                "partprice": billdata[i].partprice,
+                                "totalbill": billdata[i].totalbill
+                            }
+                            billdetails.push(billdetail);
+                        }
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: billdetails });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
         }
     }
 }

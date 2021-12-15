@@ -54,7 +54,7 @@ export default class servicing extends Model {
       allowNull: true
     },
     actualserviceenddate: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.STRING(100),
       allowNull: true
     },
     servicemanagerid: {

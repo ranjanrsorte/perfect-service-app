@@ -5,7 +5,8 @@ export default class bill extends Model {
   static init(sequelize, DataTypes) {
   super.init({
     id: {
-      type: DataTypes.SMALLINT,
+      autoIncrement: true,
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true
     },
@@ -17,7 +18,7 @@ export default class bill extends Model {
         key: 'id'
       }
     },
-    vehicletype: {
+    vehicletypeid: {
       type: DataTypes.SMALLINT,
       allowNull: false,
       references: {
@@ -38,8 +39,33 @@ export default class bill extends Model {
       }
     },
     billdate: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.STRING(100),
       allowNull: false
+    },
+    partprice: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    serviceprice: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    washingprice: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    cleaningprice: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    pickupprice: {
+      type: DataTypes.SMALLINT,
+      allowNull: true,
+      defaultValue: 0
     }
   }, {
     sequelize,

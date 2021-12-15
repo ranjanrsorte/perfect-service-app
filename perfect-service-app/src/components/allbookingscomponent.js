@@ -21,19 +21,31 @@ const AllBookingsComponent = (props) => {
         actualservicestartdate: '',
         expectedserviceenddate: '',
         actualserviceenddate: '',
-        ispickup: ''
+        ispickup: '',
+        servicestatus: ''
     });
     const [message, setMessage] = useState('');
     const [vehicletype, setVehicleType] = useState([]);
     const [bookingtype, setBookingType] = useState([]);
     const [servicedata, setServiceData] = useState({});
     const [servicingList, setServicingList] = useState([]);
+    const [billData, setBillData] = useState([]);
+    const [showBillTable, setBillTable] = useState(true);
+    const [disabledeletebtn, setdisabledeletebtn] = useState(false);
+    const [records, setRecords] = useState([]);
+    const [record, setRecord] = useState({ contect: "", price: "" });
     const vehserv = new VehicleService();
     const servingserv = new ServicingService();
 
     const loginpage = () => {
         props.history.push('/login');
     }
+
+    const backToAllBookings = () => {
+        setServiceBookingList(!showServiceBookingList);
+        setBillTable(!showBillTable);
+    }
+
     const toggleServiceBookingForm = () => {
         setServiceBookingForm(!showServiceBookingForm);
         setServiceBookingList(!showServiceBookingList);
@@ -60,7 +72,7 @@ const AllBookingsComponent = (props) => {
         });
 
         servingserv.getBookingType().then((response) => {
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setBookingType(response.data.type);
             }
         }).catch((error) => {
@@ -83,12 +95,10 @@ const AllBookingsComponent = (props) => {
                         }
                         setServicingList(records);
                     }
-                    console.log(`${JSON.stringify(response)}`);
                 }).catch((error) => {
                     setMessage(error);
                 });
             }
-            console.log(`${JSON.stringify(response)}`);
         }).catch((error) => {
             setMessage(error);
         });
@@ -115,6 +125,11 @@ const AllBookingsComponent = (props) => {
     }
 
     const getServiceRow = (row) => {
+        if(row.servicestatusid !== "Pending") {
+            setdisabledeletebtn(true);
+        } else {
+            setdisabledeletebtn(false);
+        }
         setServicing(row);
         setServiceBookingList(!showServiceBookingList);
         setReadOnlyServiceBookingForm(!showReadOnlyServiceBookingForm);
@@ -127,13 +142,23 @@ const AllBookingsComponent = (props) => {
 
     const toggleBillTable = () => {
         setReadOnlyServiceBookingForm(!showReadOnlyServiceBookingForm);
-        setBillDetails(false);
+        setBillTable(!showBillTable);
+
+        servingserv.getBillDetails(servicing).then((response) => {
+            if (response.status === 200) {
+                setBillData(response.data.records);
+            }
+        }).catch((error) => {
+            setMessage(error);
+        });
     }
 
+    const getBillRow = (row) => { }
+
     const deleteServicing = (data) => {
-        if(data.vehiclenumber !== "") {
+        if (data.vehiclenumber !== "") {
             servingserv.deleterecord(servicing).then((response) => {
-                if(response.status === 200) {
+                if (response.status === 200) {
                     servingserv.getServicingDataByCustomer().then((response) => {
                         if (response.status === 200) {
                             let records = response.data.records;
@@ -174,7 +199,7 @@ const AllBookingsComponent = (props) => {
                                 dataSource={servicingList}
                                 getSelectedRow={getServiceRow}></DataGridComponent>
 
-                        </div> 
+                        </div>
                         <div className="container" hidden={showBillDetails}>
                             <DataGridComponent
                                 dataSource={[servicing]}
@@ -286,7 +311,7 @@ const AllBookingsComponent = (props) => {
                                             value={servicing.actualserviceenddate} readOnly={true} />
                                         <br />
                                     </div>
-                                    
+
                                     <div hidden={showCustomerNameField}>
                                         <label>Customer Name</label>
                                         <input className="form-control" type="text" name="customernamenamereadonly" id="customernameidreadonly"
@@ -302,9 +327,22 @@ const AllBookingsComponent = (props) => {
                                 </div>
                                 <div>
                                     <input className="btn btn-primary btnCancelBookForm" type="button" value="Cancel" onClick={toggleReadOnlyServiceForm} />
-                                    <input className="btn btn-primary btnCancelBookForm" type="button" value="Delete" onClick={deleteServicing} />
+                                    <input className="btn btn-primary btnCancelBookForm" type="button" value="Delete" onClick={deleteServicing} disabled={disabledeletebtn} />
                                     <input className="btn btn-primary btnCancelBookForm" type="button" value="Generate Bill" onClick={toggleBillTable} />
                                 </div>
+                            </div>
+                        </div>
+                        <div className="container" hidden={showBillTable}>
+                            <input type="button" className="btn btn-warning btn-sm"
+                                value="Back To All Bookings"
+                                onClick={backToAllBookings} />
+
+                            <div>
+                                <br />
+                                <DataGridComponent
+                                    dataSource={[billData]}
+                                    getSelectedRow={getBillRow}></DataGridComponent>
+
                             </div>
                         </div>
                     </div>

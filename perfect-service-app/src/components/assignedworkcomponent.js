@@ -12,6 +12,7 @@ const AssignedWorkComponent = (props) => {
     const [showAssignedWorkForm, setAssignedWorkForm] = useState(true);
     const [showPendingBookingsList, setPendingBookingList] = useState(false);
     const showServiceManagerName = sessionStorage.getItem('role') === 'Servicing Leads' ? false : true;
+    const showReadOnlyServiceStatus = sessionStorage.getItem('role') === 'Servicing Worker' || sessionStorage.getItem('role') === 'Servicing Lead' || sessionStorage.getItem('role') === 'Servicing Manager' ? true : false;
     const [leademployee, setLeadEmployee] = useState([]);
     const [workers, setWorkers] = useState([]);
     const [servicing, setServicing] = useState({
@@ -24,8 +25,11 @@ const AssignedWorkComponent = (props) => {
         servicemanager: '',
         servicestatus: '',
         registrationtype: '',
-        customername: ''
+        customername: '',
+        parts:''
     });
+    const [servicestatuslist, setServiceStatusList] = useState([]);
+    const [servicepartslist, setServicePart] = useState([]);
     const servicingserv = new ServicingService();
     const empservice = new EmployeeService();
 
@@ -35,6 +39,13 @@ const AssignedWorkComponent = (props) => {
         servicingserv.getEmployeesData(row).then((response) => {
             if (response.status === 200) {
                 setServicing(response.data.records);
+            }
+        }).catch((error) => {
+            setMessage(error);
+        });
+        servicingserv.getVehiclePartsByVehicleType(row).then((response) => {
+            if(response.status === 200) {
+                setServicePart(response.data.records);
             }
         }).catch((error) => {
             setMessage(error);
@@ -71,6 +82,14 @@ const AssignedWorkComponent = (props) => {
             setMessage(error);
         });
 
+        servicingserv.getAllServiceStatus().then((response) => {
+            if(response.status === 200) {
+                setServiceStatusList(response.data.records);
+            }
+        }).catch((error) => {
+            setMessage(error);
+        });
+
     }, []);
 
     const handleOnChange = (evt) => {
@@ -85,6 +104,12 @@ const AssignedWorkComponent = (props) => {
         }
         if (evt.target.name === "servicingworkername") {
             setServicing({ ...servicing, serviceworker: evt.target.value });
+        }
+        if(evt.target.name === "servicestatusname") {
+            setServicing({ ...servicing, servicestatus: evt.target.value });
+        }
+        if(evt.target.name === "servicepartsname") {
+            setServicing({ ...servicing, parts: evt.target.value });
         }
     }
 
@@ -164,6 +189,21 @@ const AssignedWorkComponent = (props) => {
                                                 </select>
                                                 <br />
                                             </div>
+                                            <div className="form-group">
+                                                <label>Parts</label>
+                                                <select className="form-control"
+                                                    value={servicing.parts}
+                                                    name="servicepartsname"
+                                                    onChange={handleOnChange}
+                                                >
+                                                    {servicepartslist.map((ds, idx) => (
+                                                        <option key={idx} value={ds.part}>
+                                                            {ds.part}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <br />
+                                            </div>
                                             <div className="form-group" hidden={showServiceManagerName}>
                                                 <label>Servicing Manager</label>
                                                 <input className="form-control" type="text" name="ispickupname" id="ispickupid"
@@ -190,10 +230,25 @@ const AssignedWorkComponent = (props) => {
                                                     value={servicing.vehicletype} readOnly={true} />
                                                 <br />
                                             </div>
-                                            <div className="form-group">
+                                            <div className="form-group" hidden={showReadOnlyServiceStatus}>
                                                 <label>Service Status</label>
-                                                <input className="form-control" type="text" name="servicestatusname" id="servicestatusid"
+                                                <input className="form-control" type="text" name="servicestatusroname" id="servicestatusroid"
                                                     value={servicing.servicestatus} readOnly={true} />
+                                                <br />
+                                            </div>
+                                            <div className="form-group" hidden={!showReadOnlyServiceStatus}>
+                                                <label>Service Status</label>
+                                                <select className="form-control"
+                                                    value={servicing.servicestatus}
+                                                    name="servicestatusname"
+                                                    onChange={handleOnChange}
+                                                >
+                                                    {servicestatuslist.map((ds, idx) => (
+                                                        <option key={idx} value={ds.name}>
+                                                            {ds.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                                 <br />
                                             </div>
                                             <div className="form-group">

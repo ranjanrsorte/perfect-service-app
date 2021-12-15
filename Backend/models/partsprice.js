@@ -13,7 +13,7 @@ export default class partsprice extends Model {
       type: DataTypes.STRING(200),
       allowNull: false
     },
-    vehicletype: {
+    vehicletypeid: {
       type: DataTypes.SMALLINT,
       allowNull: false,
       references: {

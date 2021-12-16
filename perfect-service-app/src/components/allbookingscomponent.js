@@ -5,6 +5,8 @@ import ModulesComponent from "../commoncomponents/modulescomponent";
 import VehicleService from "../service/vehicleservice";
 import ServicingService from '../service/servicingservice';
 import DataGridComponent from "../commoncomponents/datagridcomponent";
+import CustomerService from "../service/customerservice";
+import LoggedInUserDetailComponent from "../commoncomponents/loggedinuserdetailcomponent";
 
 const AllBookingsComponent = (props) => {
     const showBookServiceBtn = sessionStorage.getItem('role') === 'Customer' || sessionStorage.getItem('role') === 'Servicing Representative' ? false : true;
@@ -32,8 +34,6 @@ const AllBookingsComponent = (props) => {
     const [billData, setBillData] = useState([]);
     const [showBillTable, setBillTable] = useState(true);
     const [disabledeletebtn, setdisabledeletebtn] = useState(false);
-    const [records, setRecords] = useState([]);
-    const [record, setRecord] = useState({ contect: "", price: "" });
     const vehserv = new VehicleService();
     const servingserv = new ServicingService();
 
@@ -103,10 +103,18 @@ const AllBookingsComponent = (props) => {
             setMessage(error);
         });
     }
-
+    let pattern = /[A-Z][A-Z]\-[0-9][0-9]\-[A-Z][A-Z]\-[0-9][0-9][0-9][0-9]$/i;
+    const [invalidVehicleNumber, setInvalidVehicleNumber] = useState(true);
     const handleOnChange = (evt) => {
         if (evt.target.name === "vehiclenumbername") {
-            setServiceData({ ...servicedata, vehiclenumber: evt.target.value });
+            let value = evt.target.value;
+            if (value.match(pattern)) {
+                setInvalidVehicleNumber(true);
+                setServiceData({ ...servicedata, vehiclenumber: evt.target.value });
+            } else {
+                setInvalidVehicleNumber(false);
+            }
+
         }
 
         if (evt.target.name === "vehicletypename") {
@@ -125,7 +133,7 @@ const AllBookingsComponent = (props) => {
     }
 
     const getServiceRow = (row) => {
-        if(row.servicestatusid !== "Pending") {
+        if (row.servicestatusid !== "Pending") {
             setdisabledeletebtn(true);
         } else {
             setdisabledeletebtn(false);
@@ -188,12 +196,22 @@ const AllBookingsComponent = (props) => {
                     </div>
                     <div className="col-sm-10">
                         <div>
-                            <input type="button" value="Book Service" className="btn btn-primary btn-sm addServicingBtn"
-                                onClick={toggleServiceBookingForm} hidden={showBookServiceBtn} />
-                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
-                                onClick={loginpage} />
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td className="loggedinusername">
+                                            <LoggedInUserDetailComponent></LoggedInUserDetailComponent>
+                                        </td>
+                                        <td className="logoutandbooktd">
+                                            <input type="button" value="Book Service" className="btn btn-primary btn-sm"
+                                                onClick={toggleServiceBookingForm} hidden={showBookServiceBtn} />
+                                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
+                                                onClick={loginpage} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-
                         <div className="container" hidden={showServiceBookingList}>
                             <DataGridComponent
                                 dataSource={servicingList}
@@ -210,7 +228,11 @@ const AllBookingsComponent = (props) => {
                             <div className="form-group">
                                 <label>Vehicle Number</label>
                                 <input className="form-control" type="text" name="vehiclenumbername" id="vehiclenumberid"
-                                    value={servicedata.vehiclenumber} onChange={handleOnChange} />
+                                    value={servicedata.vehiclenumber} onChange={handleOnChange}
+                                    placeholder="eg. XX-00-XX-0000" />
+                                <div className="alert alert-danger" hidden={invalidVehicleNumber}>
+                                    Please Enter valid vehicle number
+                                </div>
                                 <br />
                             </div>
                             <div>

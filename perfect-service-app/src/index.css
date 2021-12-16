@@ -36,8 +36,9 @@ code {
 }
 
 .homelogoutbtn {
-  margin-top: 1%;
+  /* margin-top: -8.5%; */
   width: 120px;
+  margin-left: 70%;
 }
 
 .homeloginbtn {
@@ -48,9 +49,18 @@ code {
 
 .addServicingBtn {
   margin-top: 1%;
-  margin-left: 75%;
+  margin-left: 50%;
   margin-right: 6px;
   width: 120px;
+  margin-bottom: -5%;
+}
+
+.loggedinusername {
+  width: 400px;
+}
+
+.logoutandbooktd {
+  width: 830px;
 }
 
 /* END : Home CSS */
@@ -149,6 +159,13 @@ code {
 
 .allbookingstablehead {
   width: 200px !important;
+}
+
+/* ALL EMPLOYEES LIST */
+
+.cancelBtnEmpForm {
+  margin-left: 60px;
+  margin-top: 6px;
 }
 
 /* END : DATA GRID TABLE */

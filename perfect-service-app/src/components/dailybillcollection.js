@@ -3,6 +3,7 @@ import { useState } from 'react';
 import ModulesComponent from '../commoncomponents/modulescomponent';
 import DataGridComponent from '../commoncomponents/datagridcomponent';
 import BillService from '../service/billservice';
+import LoggedInUserDetailComponent from '../commoncomponents/loggedinuserdetailcomponent';
 
 const DailyBillCollectionComponent = (props) => {
     const [message, setMessage] = useState("");
@@ -11,18 +12,18 @@ const DailyBillCollectionComponent = (props) => {
     const [billcollection, setBillCollection] = useState("");
     const [selecteddate, setSelectedDate] = useState("");
     const [showDateHeading, setDateHeading] = useState(true);
-    const getServiceRow = (row) => {}
+    const getServiceRow = (row) => { }
 
     const handleChange = (evt) => {
         console.log(`${evt.target.value}`);
         setSelectedDate(evt.target.value);
-        setDateHeading(!showDateHeading);
+        setDateHeading(false);
         billserv.getBillDataByDate(evt.target.value).then((response) => {
             if (response.status === 200) {
                 let records = response.data.records;
                 setServicingList(records);
                 let dailybillcollection = 0;
-                for(let x=0; x < records.length; x++) {
+                for (let x = 0; x < records.length; x++) {
                     dailybillcollection = parseInt(dailybillcollection) + parseInt(records[x].totalbill);
                 }
                 console.log(dailybillcollection);
@@ -41,6 +42,17 @@ const DailyBillCollectionComponent = (props) => {
                         <ModulesComponent></ModulesComponent>
                     </div>
                     <div className="col-sm-10">
+                        <div>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td className="loggedinusername">
+                                            <LoggedInUserDetailComponent></LoggedInUserDetailComponent>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div className='row'>
                             <div className='col-sm-2'>
                                 <br />
@@ -51,7 +63,7 @@ const DailyBillCollectionComponent = (props) => {
                         </div>
                         <br />
                         <div className='row'>
-                            <div className='col-sm-8' hidden= {showDateHeading}>
+                            <div className='col-sm-8' hidden={showDateHeading}>
                                 <h3>Bill Collection For Date '{selecteddate}' is {billcollection}</h3>
                             </div>
                         </div>

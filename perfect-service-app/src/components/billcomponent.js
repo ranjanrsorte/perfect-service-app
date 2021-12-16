@@ -3,6 +3,7 @@ import { Redirect } from "react-router-dom";
 import ModulesComponent from "../commoncomponents/modulescomponent";
 import DataGridComponent from "../commoncomponents/datagridcomponent";
 import BillService from "../service/billservice";
+import LoggedInUserDetailComponent from "../commoncomponents/loggedinuserdetailcomponent";
 
 const BillComponent = (props) => {
     const [message, setMessage] = useState('');
@@ -29,7 +30,7 @@ const BillComponent = (props) => {
 
     const getServiceRow = (row) => {
         billserv.getPriceData(row.servicingid).then((response) => {
-            if(response.status === 200) {
+            if (response.status === 200) {
                 row.washingprice = response.data.records.washingprice;
                 row.cleaningprice = response.data.records.cleaningprice;
                 row.serviceprice = response.data.records.serviceprice;
@@ -89,9 +90,20 @@ const BillComponent = (props) => {
                         <ModulesComponent></ModulesComponent>
                     </div>
                     <div className="col-sm-10">
-                        <div className="container">
-                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
-                                onClick={loginpage} />
+                        <div>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td className="loggedinusername">
+                                            <LoggedInUserDetailComponent></LoggedInUserDetailComponent>
+                                        </td>
+                                        <td className="logoutandbooktd">
+                                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
+                                                onClick={loginpage} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                         <div className="container" hidden={!showPendingBillsData}>
                             <DataGridComponent
@@ -128,7 +140,7 @@ const BillComponent = (props) => {
                                     </div>
                                     <div className="form-group">
                                         <label>Is PickUp</label>
-                                        <input className="form-control" type="text" name="servicingidname" id="servicingidid"
+                                        <input className="form-control" type="text" name="ispickupname" id="ispickupid"
                                             value={pendingbilldata.ispickup} readOnly={true} />
                                         <br />
                                     </div>
@@ -170,7 +182,8 @@ const BillComponent = (props) => {
                                     <div className="form-group">
                                         <label>PickUp Price</label>
                                         <input className="form-control" type="number" name="pickuppricename" id="pickuppriceid"
-                                            value={pendingbilldata.pickupprice} readOnly={pendingbilldata.ispickup === 'No'} />
+                                            value={pendingbilldata.pickupprice} readOnly={pendingbilldata.ispickup === 'No'}
+                                            onChange={handleOnChange} />
                                         <br />
                                     </div>
                                 </div>

@@ -4,6 +4,7 @@ import ModulesComponent from '../commoncomponents/modulescomponent';
 import DataGridComponent from '../commoncomponents/datagridcomponent';
 import ServicingService from '../service/servicingservice';
 import EmployeeService from '../service/employeeservice';
+import LoggedInUserDetailComponent from '../commoncomponents/loggedinuserdetailcomponent';
 
 
 const AssignedWorkComponent = (props) => {
@@ -26,7 +27,7 @@ const AssignedWorkComponent = (props) => {
         servicestatus: '',
         registrationtype: '',
         customername: '',
-        parts:''
+        parts: ''
     });
     const [servicestatuslist, setServiceStatusList] = useState([]);
     const [servicepartslist, setServicePart] = useState([]);
@@ -44,7 +45,7 @@ const AssignedWorkComponent = (props) => {
             setMessage(error);
         });
         servicingserv.getVehiclePartsByVehicleType(row).then((response) => {
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setServicePart(response.data.records);
             }
         }).catch((error) => {
@@ -75,7 +76,7 @@ const AssignedWorkComponent = (props) => {
         });
 
         empservice.getServiceWorkers().then((response) => {
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setWorkers(response.data.records);
             }
         }).catch((error) => {
@@ -83,7 +84,7 @@ const AssignedWorkComponent = (props) => {
         });
 
         servicingserv.getAllServiceStatus().then((response) => {
-            if(response.status === 200) {
+            if (response.status === 200) {
                 setServiceStatusList(response.data.records);
             }
         }).catch((error) => {
@@ -105,10 +106,10 @@ const AssignedWorkComponent = (props) => {
         if (evt.target.name === "servicingworkername") {
             setServicing({ ...servicing, serviceworker: evt.target.value });
         }
-        if(evt.target.name === "servicestatusname") {
+        if (evt.target.name === "servicestatusname") {
             setServicing({ ...servicing, servicestatus: evt.target.value });
         }
-        if(evt.target.name === "servicepartsname") {
+        if (evt.target.name === "servicepartsname") {
             setServicing({ ...servicing, parts: evt.target.value });
         }
     }
@@ -137,9 +138,22 @@ const AssignedWorkComponent = (props) => {
                         <ModulesComponent></ModulesComponent>
                     </div>
                     <div className="col-sm-10">
+                        <div>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td className="loggedinusername">
+                                            <LoggedInUserDetailComponent></LoggedInUserDetailComponent>
+                                        </td>
+                                        <td className="logoutandbooktd">
+                                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
+                                                onClick={loginpage} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div className="container">
-                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
-                                onClick={loginpage} />
                             <div hidden={showPendingBookingsList}>
                                 <DataGridComponent
                                     dataSource={servicingList}

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import ModulesComponent from "../commoncomponents/modulescomponent";
 import DataGridComponent from "../commoncomponents/datagridcomponent";
 import ServicingService from "../service/servicingservice";
+import LoggedInUserDetailComponent from "../commoncomponents/loggedinuserdetailcomponent";
 
 const WaitingForDeliveryComponent = (props) => {
 
@@ -64,9 +65,20 @@ const WaitingForDeliveryComponent = (props) => {
                         <ModulesComponent></ModulesComponent>
                     </div>
                     <div className="col-sm-10">
-                        <div className="container">
-                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
-                                onClick={loginpage} />
+                        <div>
+                            <table>
+                                <tbody>
+                                    <tr>
+                                        <td className="loggedinusername">
+                                            <LoggedInUserDetailComponent></LoggedInUserDetailComponent>
+                                        </td>
+                                        <td className="logoutandbooktd">
+                                            <input type="button" value="LogOut" className="btn btn-primary btn-sm homelogoutbtn"
+                                                onClick={loginpage} />
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                         <br />
                         <div className="container" hidden={showWaitingDataTable}>

@@ -129,4 +129,14 @@ export default class ServicingService {
         });
         return response;
     }
+
+    getDeliveredServicingList() {
+        let response = axios.get(`${this.url}/api/get/delivered/services`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': 'Bearer ' + sessionStorage.getItem('token')
+            }
+        });
+        return response;
+    }
 }

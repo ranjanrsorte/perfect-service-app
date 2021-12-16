@@ -28,6 +28,7 @@ instance.post("/api/service/book", dataAccess.bookServicing);
 instance.get("/api/service/get", dataAccess.getServicingDataByCustomer);
 instance.delete("/api/service/delete/:vehiclenumber", dataAccess.deleteServiceRecord);
 instance.get("/api/get/bill/:vehiclenumber", dataAccess.getBillData);
+instance.get("/api/get/loggedinuser/:useremail", dataAccess.getLoggedInUserDetails);
 
 // Assigned Work
 instance.get("/api/assign/work/manager/get", dataAccess.getPendingServiceDataByManager);
@@ -49,6 +50,15 @@ instance.post("/api/update/status/delivered", dataAccess.updateStatusDelivered);
 
 // Daily Bill Collection
 instance.get("/api/daily/bills/report/:servicedate", dataAccess.getDailyBillReport);
+
+// Delivered
+instance.get("/api/get/delivered/services", dataAccess.getDeliveredServices);
+
+// Employees List
+instance.get("/api/employees/get", dataAccess.getAllEmployeesList);
+instance.get("/api/employees/type", dataAccess.getEmployeeType);
+instance.post("/api/employees/update", dataAccess.updateEmployeeData);
+instance.post("/api/employees/add", dataAccess.addEmployee);
 
 
 instance.listen(port, () => {

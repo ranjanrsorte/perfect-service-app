@@ -15,6 +15,7 @@ import servicestatus from './models/servicestatus.js';
 import assignedworkers from './models/assignedworkers.js';
 import partsprice from './models/partsprice.js';
 import bill from './models/bill.js';
+import e from "express";
 
 const sequelize = new Sequelize("perfectservice", "postgres", "mysql", {
     host: "localhost",
@@ -112,28 +113,35 @@ class DataAccess {
             req.body.id = maxCustId + 1;
         }
 
-        const custtype = await customertype.findOne({
-            where: { name: req.body.customertype }
-        });
-        console.log(`custtype ${JSON.stringify(custtype)}`);
+        console.log(`......................................`);
+        console.log(`${JSON.stringify(req.body)}`);
+        console.log(`......................................`);
 
-        if (custtype != null) {
-            req.body.customertype = parseInt(custtype.id);
-        } else {
-            return res.status(500).send({ message: "Invalid Customer Type" });
-        }
-        req.body.type = 7;
-        console.log(`req.body ${JSON.stringify(req.body)}`);
+        if (req.body.name !== "" && req.body.email !== "" && req.body.password !== "" && req.body.address !== "" && req.body.city !== ""
+            && req.body.state !== "" && req.body.primarycontactnumber !== "" && req.body.contactnumber !== "" && req.body.landline !== "" && req.body.customertype !== "") {
+            const custtype = await customertype.findOne({
+                where: { name: req.body.customertype }
+            });
+            console.log(`custtype ${JSON.stringify(custtype)}`);
 
-        let cust = await customer.create(req.body);
-        if (cust) {
+            if (custtype != null) {
+                req.body.customertype = parseInt(custtype.id);
+            } else {
+                return res.status(500).send({ message: "Invalid Customer Type" });
+            }
+            req.body.type = 7;
+            console.log(`req.body ${JSON.stringify(req.body)}`);
+
+            let cust = await customer.create(req.body);
+            if (cust) {
+                return res
+                    .status(200)
+                    .send({ message: "Data is added successfully", data: cust });
+            }
             return res
-                .status(200)
-                .send({ message: "Data is added successfully", data: cust });
+                .status(500)
+                .send({ message: "Some error Occurred while adding record" });
         }
-        return res
-            .status(500)
-            .send({ message: "Some error Occurred while adding record" });
     }
 
     async getVehicleType(req, res) {
@@ -345,7 +353,7 @@ class DataAccess {
                     req.decode = decode;
                     let serv;
                     if (req.decode.tokenDataJson.rolename === 'Servicing Manager') {
-                        serv = await servicing.findAll();
+                        serv = await servicing.findAll({ where: { servicestatusid: { [Op.ne]: 5 } } });
                     } else if (req.decode.tokenDataJson.rolename === 'Servicing Leads') {
                         let emp = await employee.findOne({ where: { loginname: req.decode.tokenDataJson.username } });
                         serv = await servicing.findAll({ where: { serviceleadid: emp.id } });
@@ -356,7 +364,7 @@ class DataAccess {
                         for (let p = 0; p < assignwork.length; p++) {
                             servid.push(parseInt(assignwork[p].servicingid));
                         }
-                        serv = await servicing.findAll({ where: { id: { [Op.in]: servid } } });
+                        serv = await servicing.findAll({ where: { id: { [Op.in]: servid }, servicestatusid: { [Op.ne]: 5 } } });
                     }
 
                     if (serv) {
@@ -726,6 +734,7 @@ class DataAccess {
                         "washingprice": req.body.washingprice,
                         "cleaningprice": req.body.cleaningprice,
                         "serviceprice": req.body.serviceprice,
+                        "pickupprice": req.body.pickupprice,
                         "totalbill": parseInt(totalprice)
                     }
                     let billdata = await bill.update(updatedbill, { where: { servicingid: req.params.servicingid } });
@@ -934,6 +943,266 @@ class DataAccess {
                     return res
                         .status(500)
                         .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getLoggedInUserDetails(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    let role = "";
+                    let cust = await customer.findOne({ where: { email: req.params.useremail } });
+
+                    if (cust === null) {
+                        cust = await employee.findOne({ where: { loginname: req.params.useremail } });
+                    }
+                    const emprole = await employeetype.findOne({ where: { id: cust.type } });
+                    role = emprole.name;
+
+                    let loggedinuserdata = {
+                        "name": cust.name === null ? cust.name : cust.name,
+                        "rolename": role
+                    }
+                    return res
+                        .status(200)
+                        .send({ message: `Data read Successfully`, records: loggedinuserdata });
+                }
+            )
+        }
+    }
+
+    async getDeliveredServices(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const serv = await servicing.findAll({ where: { servicestatusid: 5 } });
+                    if (serv) {
+                        let servdata = [];
+                        for (let p = 0; p < serv.length; p++) {
+                            const cust = await customer.findOne({ where: { id: serv[p].customerid } });
+                            const vehtype = await vehicletype.findOne({ where: { id: serv[p].vehicletype } });
+                            const regtype = await bookingtype.findOne({ where: { id: serv[p].registrationtype } });
+                            const servstatus = await servicestatus.findOne({ where: { id: serv[p].servicestatusid } });
+                            let data = {
+                                "vehiclenumber": serv[p].vehiclenumber,
+                                "registrationdate": serv[p].registrationdate,
+                                "numberofservice": serv[p].numberofservice,
+                                "customername": cust.name,
+                                "registrationtype": regtype.name,
+                                "vehicletype": vehtype.name,
+                                "servicestatus": servstatus.name,
+                                "ispickup": serv[p].ispickup === 0 ? 'No' : 'Yes'
+                            }
+                            servdata.push(data);
+                        }
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: servdata });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getAllEmployeesList(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const emp = await employee.findAll();
+                    if (emp) {
+                        let employeesData = [];
+                        for (let i = 0; i < emp.length; i++) {
+                            const emptype = await employeetype.findOne({ where: { id: emp[i].type } });
+                            let empdata = {
+                                "loginname": emp[i].loginname,
+                                "name": emp[i].name,
+                                "contactnumber": emp[i].contactnumber,
+                                "employeetype": emptype.name
+                            }
+                            employeesData.push(empdata);
+                        }
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: employeesData });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async getEmployeeType(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const emptype = await employeetype.findAll();
+                    if (emptype) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: emptype });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async updateEmployeeData(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    const emptype = await employeetype.findOne({ where: { name: req.body.employeetype } });
+                    const emp = await employee.update({
+                        "name": req.body.name,
+                        "contactnumber": req.body.contactnumber,
+                        "type": emptype.id
+                    }, { where: { loginname: req.body.loginname } });
+                    if (emp) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: emp });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+                }
+            )
+        }
+    }
+
+    async addEmployee(req, res) {
+        if (req.headers.authorization !== undefined) {
+            const receivedToken = req.headers.authorization.split(" ")[1];
+            await jsonwebtoken.verify(
+                receivedToken,
+                jwtSettings.jwtSecret,
+                async (error, decode) => {
+                    if (error) {
+                        return res.status(401).send({
+                            message: `User Authentication Failed because token verification failed`,
+                        });
+                    }
+                    req.decode = decode;
+                    await sequelize.sync({ force: false });
+                    let maxCustId = await employee.max('id', { where: req.body.id });
+                    if (maxCustId === null) {
+                        req.body.id = 1;
+                    } else {
+                        req.body.id = maxCustId + 1;
+                    }
+                    const emptype = await employeetype.findOne({ where: { name: req.body.employeetype } });
+                    const emp = await employee.create({
+                        "id": req.body.id,
+                        "loginname": req.body.name,
+                        "password": null,
+                        "name": req.body.name,
+                        "conatactnumber": req.body.contactnumber,
+                        "type": emptype.id
+                    });
+                    if (emp) {
+                        return res
+                            .status(200)
+                            .send({ message: `Data read Successfully`, records: emp });
+                    }
+                    return res
+                        .status(500)
+                        .send({ message: "Some error Occurred while reading record" });
+
+                    /*
+                    await sequelize.sync({ force: false });
+                    
+                            let maxCustId = await customer.max('id', { where: req.body.id });
+                            if (maxCustId === null) {
+                                req.body.id = 1;
+                            } else {
+                                req.body.id = maxCustId + 1;
+                            }
+                    
+                            console.log(`......................................`);
+                            console.log(`${JSON.stringify(req.body)}`);
+                            console.log(`......................................`);
+                    
+                            if (req.body.name !== "" && req.body.email !== "" && req.body.password !== "" && req.body.address !== "" && req.body.city !== ""
+                                && req.body.state !== "" && req.body.primarycontactnumber !== "" && req.body.contactnumber !== "" && req.body.landline !== "" && req.body.customertype !== "") {
+                                const custtype = await customertype.findOne({
+                                    where: { name: req.body.customertype }
+                                });
+                                console.log(`custtype ${JSON.stringify(custtype)}`);
+                    
+                                if (custtype != null) {
+                                    req.body.customertype = parseInt(custtype.id);
+                                } else {
+                                    return res.status(500).send({ message: "Invalid Customer Type" });
+                                }
+                                req.body.type = 7;
+                                console.log(`req.body ${JSON.stringify(req.body)}`);
+                    
+                                let cust = await customer.create(req.body);
+                                if (cust) {
+                                    return res
+                                        .status(200)
+                                        .send({ message: "Data is added successfully", data: cust });
+                                }
+                                return res
+                                    .status(500)
+                                    .send({ message: "Some error Occurred while adding record" });
+                            }
+                    
+                    */
                 }
             )
         }

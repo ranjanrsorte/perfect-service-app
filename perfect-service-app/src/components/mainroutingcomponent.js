@@ -13,6 +13,7 @@ import AssignedWorkComponent from "./assignedworkcomponent";
 import WaitingForDeliveryComponent from "./waitingfordeliverycomponent";
 import GeneratedBillComponent from "./genratedbillcomponent";
 import DailyBillCollectionComponent from "./dailybillcollection"
+import DeliveredServicesComponent from "./deliveredservicescomponent";
 
 
 const MainRoutingComponent = () => {
@@ -41,7 +42,7 @@ const MainRoutingComponent = () => {
                     {/* <Route exact path="/userprofile" component={UserProfileComponent}></Route> */}
                     <Route exact path="/bookings" component={AllBookingsComponent}></Route>
                     {/* <Route exact path="/customers" component={CustomerListComponent}></Route> */}
-                    {/* <Route exact path="/employees" component={EmployeesListComponent}></Route> */}
+                    <Route exact path="/employees" component={EmployeesListComponent}></Route>
                     {/* <Route exact path="/servicing" component={AssignedServicingComponent}></Route> */}
                     {/* <Route exact path="/parts" component={PartsAndPriceComponent}></Route> */}
                     <Route exact path="/bill" component={BillComponent}></Route>
@@ -49,6 +50,7 @@ const MainRoutingComponent = () => {
                     <Route exact path="/waiting" component={WaitingForDeliveryComponent}></Route>
                     {/* <Route exact path="/generatedbill" component={GeneratedBillComponent}></Route> */}
                     <Route exact path="/dailycollection" component={DailyBillCollectionComponent}></Route>
+                    <Route exact path="/delivered" component={DeliveredServicesComponent}></Route>
                 </Switch>
             </div>
         </div>

@@ -18,4 +18,15 @@ export default class CustomerService {
         });
         return response;
     }
+
+    getLoggedInCustomerDetails() {
+        let useremail = sessionStorage.getItem('email');
+        let response = axios.get(`${this.url}/api/get/loggedinuser/${useremail}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'authorization': 'Bearer ' + sessionStorage.getItem('token')
+            }
+        });
+        return response;
+    }
 }

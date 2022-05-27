@@ -24,7 +24,7 @@ const sequelize = new Sequelize("perfectservice", "postgres", "mysql", {
 });
 
 const jwtSettings = {
-    jwtSecret: "msit007700itms",
+    jwtSecret: "",
 };
 
 sequelize.authenticate().then(
